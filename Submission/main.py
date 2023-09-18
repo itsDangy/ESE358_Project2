@@ -42,7 +42,7 @@ def Map2Da(K, R, T, Vi):
     v[0]= P[0] / w1  #v[0] is the x-value for the 2D point v
 
     #MISSING: compute v[1], the y-value for the 2D point v
-    # v[1] = ?????????????
+    v[1] = P[1] / w1 
 
     return v
 
@@ -111,8 +111,8 @@ def main():
     Calculate u81 here and use it to construct 3x3 matrix N used later to compute rotation matrix R
     Matrix N is described in Eq. 2.32, matrix R is described in Eq. 2.34
     '''
-    # u81 = ?????????????????
-    # N = ?????????????????
+    u81 = V8-V1 / np.abs(V8-V1)
+    N = [[0,-(u81[2]),u81[1]],[u81[2],0,-(u81[0])],[-(u81[1]),u81[0],0]]
 
     #Initialized given values (do not change unless you're testing something):
     T0 = np.array([-20, -25, 500])  # origin of object coordinate system in mm
@@ -129,7 +129,7 @@ def main():
     time_range = np.arange(0.0, 24.2, 0.2)
 
     #MISSING: Initialize the 3x3 intrinsic matrix K given focal length f
-    # K = ????????????????
+    K = [[f,0,0],[0,f,0],[0,0,1]]
 
    
     # This section handles mapping the texture to one face:
@@ -149,10 +149,10 @@ def main():
     # Find the unit vectors u21 and u41 which coorespond to (V2-V1) and (V4-V1)
     # hint: u21 = (V2-V1) / h ; u41 = (V4 - V1) / w
 
-    # h = ???????????????
-    # w = ???????????????
-    # u21 =???????????????
-    # u41 =???????????????
+    h = 10
+    w = 10
+    u21 = (V2-V1) / h
+    u41 = (V4 - V1) / w
 
     # We use u21 and u41 to iteratively discover each point of the face below:
 
@@ -174,8 +174,8 @@ def main():
             p1 = V1 + (i) * u21 * (h / r) + (j) * u41 * (w / c)
             X[i, j] = p1[0]
             #MISSING: compute the Y and Z for 3D point pertaining to this pixel of tmap
-            # Y[i,j] = ??
-            # Z[i,j] = ??
+            Y[i,j] = p1[1]
+            Z[i,j] = p1[2]
 
     
     for t in time_range:  # Generate a sequence of images as a function of time
@@ -184,7 +184,7 @@ def main():
         # MISSING: compute rotation matrix R as shown in Eq. 2.34
         # Warning: be mindful of radians vs degrees
         # Note: for numpy data, @ operator can be used for dot product
-        # R = ?????????????
+        R = np.identity(3) + np.sin(theta) * N + (1 - np.cos(theta)) * (N @ N)
 
         # find the image position of vertices
 
@@ -193,10 +193,30 @@ def main():
         #save all 2D vertices as v1 to v8
 
         #example for V1 -> v1:
-        #v = Map2Da(K, R, T, V1)
-        #v1 = MapIndex(v, c0, r0, p)
+        v = Map2Da(K, R, T, V1)
+        v1 = MapIndex(v, c0, r0, p)
         
         # v2, v3, ..., v8 = ?????????????????????????????
+        v = Map2Da(K, R, T, V2)
+        v2 = MapIndex(v, c0, r0, p)
+        
+        v = Map2Da(K, R, T, V3)
+        v3 = MapIndex(v, c0, r0, p)
+
+        v = Map2Da(K, R, T, V4)
+        v4 = MapIndex(v, c0, r0, p)
+
+        v = Map2Da(K, R, T, V5)
+        v5 = MapIndex(v, c0, r0, p)
+
+        v = Map2Da(K, R, T, V6)
+        v6 = MapIndex(v, c0, r0, p)
+
+        v = Map2Da(K, R, T, V7)
+        v7 = MapIndex(v, c0, r0, p)
+
+        v = Map2Da(K, R, T, V8)
+        v8 = MapIndex(v, c0, r0, p)
 
         # Draw edges of the cube
 
@@ -209,11 +229,22 @@ def main():
         #there are 12 edges to draw
         
         #example drawing the v1 to v2 line:
-        #A = drawLine(A, v1, v2, color, thickness)
+        A = drawLine(A, v1, v2, color, thickness)
+        A = drawLine(A, v1, v4, color, thickness)
+        A = drawLine(A, v1, v7, color, thickness)
+        A = drawLine(A, v2, v3, color, thickness)
+        A = drawLine(A, v2, v6, color, thickness)
+        A = drawLine(A, v3, v4, color, thickness)
+        A = drawLine(A, v3, v8, color, thickness)
+        A = drawLine(A, v4, v5, color, thickness)
+        A = drawLine(A, v5, v7, color, thickness)
+        A = drawLine(A, v5, v8, color, thickness)
+        A = drawLine(A, v6, v7, color, thickness)
+        A = drawLine(A, v6, v8, color, thickness)
 
         # ????????????????????????????
 
-        # Now we must add the texture to the face bounded by v1-4:
+        #Now we must add the texture to the face bounded by v1-4:
         for i in range(r):
             for j in range(c):
                 p1 = [X[i, j], Y[i, j], Z[i, j]]
