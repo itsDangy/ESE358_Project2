@@ -184,7 +184,7 @@ def main():
         # MISSING: compute rotation matrix R as shown in Eq. 2.34
         # Warning: be mindful of radians vs degrees
         # Note: for numpy data, @ operator can be used for dot product
-        R = np.identity(3) + np.sin(theta) * N + (1 - np.cos(theta)) * (N @ N)
+        R = np.identity(3) + (np.sin(theta)) * np.float64(N) + (1 - np.cos(theta)) * np.float64((N @ N))
 
         # find the image position of vertices
 
@@ -258,6 +258,8 @@ def main():
                 # This gives us a point in A to color in for the texture 
                 #note: cast ir, jr to int so it can index array A
                 #(ir, jr) = ?????????????????????????
+                ir=int(p1[0])
+                jr=int(p1[1])
 
                 if ((ir >= 0) and (jr >= 0) and (ir < Rows) and (jr < Cols)):
                     tmapval = tmap[i, j, 2]
