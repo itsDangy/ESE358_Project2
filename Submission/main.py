@@ -184,7 +184,11 @@ def main():
     # and associating each point with a color from texture:
     tmap = cv2.imread('einstein50x50v.jpg')  # texture map image
     if tmap is None:
-        print("image file can not be found on path given. Exiting now")
+        print("tmap image file can not be found on path given. Exiting now")
+        sys.exit(1)
+    background = cv2.imread('background.jpg')
+    if background is None:
+        print("background image file can not be found on path given. Exiting now")
         sys.exit(1)
 
     r, c, colors = tmap.shape
@@ -253,8 +257,7 @@ def main():
         #there are 12 edges to draw
         
         #draw background
-        background = cv2.imread('background.jpg')
-
+        A = np.array(background, dtype = np.uint8)
         #example drawing the v1 to v2 line:
         A = drawLine(A, v1, v2, color, thickness)
         A = drawLine(A, v2, v3, color, thickness)
@@ -285,16 +288,14 @@ def main():
                 # This gives us a point in A to color in for the texture 
                 #note: cast ir, jr to int so it can index array A
                 #(ir, jr) = ?????????????????????????
-                ir=int(MapIndex(p1,c0,r0,p)[0])
-                jr=int(MapIndex(p1,c0,r0,p)[1])
+                ir=int(MapIndex(Map2Da(K,R,T,p1),c0,r0,p)[0])
+                jr=int(MapIndex(Map2Da(K,R,T,p1),c0,r0,p)[1])
 
                 if ((ir >= 0) and (jr >= 0) and (ir < Rows) and (jr < Cols)):
                     tmapval = tmap[i, j, 2]
-                    A[ir ,jr] = [ 0, 0, tmapval ] # gray here, but [0, 0, tmpval] for red color output
-
+                    A[ir ,jr] = [ tmapval, tmapval, tmapval ] # gray here, but [0, 0, tmpval] for red color output
 
         cv2.imshow("Display Window", A)
-
         # cv2.waitKey(0)
         # ^^^ uncomment if you want to display frame by frame
         # and press return(or any other key) to display the next frame
