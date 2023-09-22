@@ -62,7 +62,7 @@ def MapIndex(u, c0, r0, p):
     v = [None]*2
     v[0] = round(r0 - u[1] / p)
     # MISSING: complete the line below:
-    # v[1] = ?????
+    v[1] = round(c0 + u[0] / p)
     return v
 
 '''
@@ -85,8 +85,28 @@ NOTE: order of vertex1 and vertex2 does not change the line drawn
 def drawLine(A,vertex1, vertex2, color = (255, 255, 255), thickness=3):
     v1 = list(reversed(vertex1))
     v2 = list(reversed(vertex2))
-    return cv2.line(A, v1, v2,  color, thickness)  #replace this
-
+    
+    # Calculate the slope of the line
+    dx = v2[0] - v1[0]
+    dy = v2[1] - v1[1]
+    
+    if dx == 0:  # Vertical line
+        y_range = np.arange(min(v1[1], v2[1]), max(v1[1], v2[1]) + 1)
+        for y in y_range:
+            A[y, v1[0]:v1[0] + thickness] = color
+    else:
+        slope = dy / dx
+        if abs(slope) <= 1:  # Shallow slope
+            x_range = np.arange(min(v1[0], v2[0]), max(v1[0], v2[0]) + 1)
+            y_range = np.round(v1[1] + slope * (x_range - v1[0])).astype(int)
+        else:  # Steep slope
+            y_range = np.arange(min(v1[1], v2[1]), max(v1[1], v2[1]) + 1)
+            x_range = np.round(v1[0] + (1 / slope) * (y_range - v1[1])).astype(int)
+        
+        for x, y in zip(x_range, y_range):
+            A[y, x:x + thickness] = color
+    
+    return A
 
 
 def main():
@@ -111,8 +131,10 @@ def main():
     Calculate u81 here and use it to construct 3x3 matrix N used later to compute rotation matrix R
     Matrix N is described in Eq. 2.32, matrix R is described in Eq. 2.34
     '''
-    u81 = V8-V1 / np.abs(V8-V1)
-    N = [[0,-(u81[2]),u81[1]],[u81[2],0,-(u81[0])],[-(u81[1]),u81[0],0]]
+    u81 = (V8-V1) / np.linalg.norm(V8-V1)
+    N = np.matrix([ [0,-(u81[2]),u81[1]],
+                    [u81[2],0,-(u81[0])],
+                    [-(u81[1]),u81[0],0]])
 
     #Initialized given values (do not change unless you're testing something):
     T0 = np.array([-20, -25, 500])  # origin of object coordinate system in mm
@@ -129,7 +151,9 @@ def main():
     time_range = np.arange(0.0, 24.2, 0.2)
 
     #MISSING: Initialize the 3x3 intrinsic matrix K given focal length f
-    K = [[f,0,0],[0,f,0],[0,0,1]]
+    K = np.matrix([[f,0,0],
+                   [0,f,0],
+                   [0,0,1]])
 
    
     # This section handles mapping the texture to one face:
@@ -149,8 +173,8 @@ def main():
     # Find the unit vectors u21 and u41 which coorespond to (V2-V1) and (V4-V1)
     # hint: u21 = (V2-V1) / h ; u41 = (V4 - V1) / w
 
-    h = 10
-    w = 10
+    h = length
+    w = length
     u21 = (V2-V1) / h
     u41 = (V4 - V1) / w
 
@@ -166,7 +190,7 @@ def main():
     r, c, colors = tmap.shape
     # We keep three arrays of size (r, c) to store the (X, Y, Z) points cooresponding
     # to each pixel on the texture 
-    X = np.zeros((r, c), dtype=np.float64)
+    X = np.zeros((r, c), dtype=np.float64)  
     Y = np.zeros((r, c), dtype=np.float64)
     Z = np.zeros((r, c), dtype=np.float64)
     for i in range(0, r):
@@ -184,7 +208,7 @@ def main():
         # MISSING: compute rotation matrix R as shown in Eq. 2.34
         # Warning: be mindful of radians vs degrees
         # Note: for numpy data, @ operator can be used for dot product
-        R = np.identity(3) + (np.sin(theta)) * np.float64(N) + (1 - np.cos(theta)) * np.float64((N @ N))
+        R = np.identity(3) + (np.sin(np.deg2rad(theta))) * N + ((1 - np.cos(np.deg2rad(theta)))) * (N * N)
 
         # find the image position of vertices
 
@@ -228,19 +252,22 @@ def main():
         #MISSING: use drawLine to draw the edges to draw a naked cube
         #there are 12 edges to draw
         
+        #draw background
+        background = cv2.imread('background.jpg')
+
         #example drawing the v1 to v2 line:
         A = drawLine(A, v1, v2, color, thickness)
-        A = drawLine(A, v1, v4, color, thickness)
-        A = drawLine(A, v1, v7, color, thickness)
         A = drawLine(A, v2, v3, color, thickness)
-        A = drawLine(A, v2, v6, color, thickness)
         A = drawLine(A, v3, v4, color, thickness)
+        A = drawLine(A, v4, v1, color, thickness)
+        A = drawLine(A, v7, v6, color, thickness)
+        A = drawLine(A, v6, v8, color, thickness)
+        A = drawLine(A, v8, v5, color, thickness)
+        A = drawLine(A, v5, v7, color, thickness)
+        A = drawLine(A, v1, v7, color, thickness)
+        A = drawLine(A, v2, v6, color, thickness)
         A = drawLine(A, v3, v8, color, thickness)
         A = drawLine(A, v4, v5, color, thickness)
-        A = drawLine(A, v5, v7, color, thickness)
-        A = drawLine(A, v5, v8, color, thickness)
-        A = drawLine(A, v6, v7, color, thickness)
-        A = drawLine(A, v6, v8, color, thickness)
 
         # ????????????????????????????
 
@@ -258,17 +285,17 @@ def main():
                 # This gives us a point in A to color in for the texture 
                 #note: cast ir, jr to int so it can index array A
                 #(ir, jr) = ?????????????????????????
-                ir=int(p1[0])
-                jr=int(p1[1])
+                ir=int(MapIndex(p1,c0,r0,p)[0])
+                jr=int(MapIndex(p1,c0,r0,p)[1])
 
                 if ((ir >= 0) and (jr >= 0) and (ir < Rows) and (jr < Cols)):
                     tmapval = tmap[i, j, 2]
-                    A[ir ,jr] = [ tmapval, tmapval, tmapval ] # gray here, but [0, 0, tmpval] for red color output
+                    A[ir ,jr] = [ 0, 0, tmapval ] # gray here, but [0, 0, tmpval] for red color output
 
 
         cv2.imshow("Display Window", A)
 
-        #cv2.waitKey(0)
+        # cv2.waitKey(0)
         # ^^^ uncomment if you want to display frame by frame
         # and press return(or any other key) to display the next frame
         #by default just waits 1 ms and goes to next frame
