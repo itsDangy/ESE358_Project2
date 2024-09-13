@@ -74,7 +74,6 @@ def MapIndex(u, c0, r0, p):
     #          i.e. for the pixel on the right side of the center, its second index is larger than c0;
     # MISSING: complete the line below:
     v[1] = round(c0 + u[0] / p)
-    v[1] = round(c0 + u[0] / p)
     return v
 
 '''
@@ -150,10 +149,6 @@ def main():
     Calculate u81 here and use it to construct 3x3 matrix N used later to compute rotation matrix R
     Matrix N is described in Eq. 2.32, matrix R is described in Eq. 2.34
     '''
-    u81 = (V8-V1) / np.linalg.norm(V8-V1)
-    N = np.matrix([ [0,-(u81[2]),u81[1]],
-                    [u81[2],0,-(u81[0])],
-                    [-(u81[1]),u81[0],0]])
     u81 = (V8-V1) / np.linalg.norm(V8-V1)
     N = np.matrix([ [0,-(u81[2]),u81[1]],
                     [u81[2],0,-(u81[0])],
